@@ -1,0 +1,19 @@
+{
+  "name": "squalalah/customquerybuilder",
+  "description": "Custom query builder in PHP",
+  "minimum-stability": "stable",
+  "license": "proprietary",
+  "authors": [
+    {
+      "name": "Squalalah",
+      "email": "amontreuilpro@gmail.com"
+    }
+  ],
+  "require": {
+    "phpunit/phpunit": "^9.6",
+    "phpstan/phpstan": "^1.10",
+    "friendsofphp/php-cs-fixer": "^3.16",
+    "ext-mysqli": "*",
+    "ext-sqlite3": "*"
+  }
+}
