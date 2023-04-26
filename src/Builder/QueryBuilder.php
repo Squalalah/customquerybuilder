@@ -7,7 +7,7 @@ use tests\MyDB;
 
 class QueryBuilder
 {
-    private const DYNAMIC_ARGUMENT_DELIMITER = ':';
+    private const DYNAMIC_ARGUMENT_DELIMITER = ":";
     private const SELECT = "SELECT";
     private const FROM = "FROM";
     private const WHERE = "WHERE";
