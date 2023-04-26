@@ -3,7 +3,7 @@
 namespace tests\QueryBuilder;
 
 use CustomQueryBuilder\Builder\QueryBuilder;
-use Exception;
+use CustomQueryBuilder\Exception\QueryParameterCountDontMatchException;
 use PHPUnit\Framework\TestCase;
 use tests\MyDB;
 
@@ -74,7 +74,7 @@ class QueryBuilderTest extends TestCase
     **/
     public function itThrowsOnCustomArgumentWithNoParameters(): void
     {
-        $this->expectException(Exception::class);
+        $this->expectException(QueryParameterCountDontMatchException::class);
 
         $query = (new QueryBuilder())
             ->select('*')
@@ -102,6 +102,5 @@ class QueryBuilderTest extends TestCase
         $result = $this->database->query($query)->fetchArray(SQLITE3_ASSOC);
 
         $this->assertFalse($result);
-
     }
 }
