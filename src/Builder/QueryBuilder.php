@@ -2,6 +2,8 @@
 
 namespace CustomQueryBuilder\Builder;
 
+use tests\MyDB;
+
 class QueryBuilder
 {
     private string $query;
@@ -51,21 +53,23 @@ class QueryBuilder
             if(!$this->checkParametersCountMatchesWithWhereParams()) {
                 throw new \Exception("The QueryBuilder parameters count does not match the number of dynamic parameter in WHERE clause");
             }
-
-            for($i = 0; $i < substr_count($this->whereClause, ':', 0); $i++) {
+            $customParametersCount = substr_count($this->whereClause, ':', 0);
+            for($i = 0; $i < $customParametersCount; $i++) {
                 $pos = strpos($this->whereClause, ':', 0);
                 if($pos !== false) {
                     foreach($this->parameters as $parameter) {
                         /** @var array<mixed> $parameter */
                         /** @var string $name */
                         $name = array_key_first($parameter);
+                        if(strpos($this->whereClause, $name, $pos)-$pos !== 1) {
+                            continue;
+                        }
                         $this->whereClause = substr_replace($this->whereClause, "'" . $parameter[$name] . "'", $pos, strlen($name)+1);
                     }
                 }
             }
             $this->query .= trim($this->whereClause);
         }
-
         return $this->query;
     }
     public function __toString(): string

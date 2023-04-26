@@ -37,8 +37,32 @@ class QueryBuilderTest extends TestCase
 
         $result = $this->database->query($query)->fetchArray(SQLITE3_ASSOC);
 
-        $this->assertEquals(1, count($result));
+        $this->assertCount(1, $result);
         $this->assertEquals("abc", $result["name"]);
+    }
+
+    /**
+    * @test
+    *
+    * Given a data in testdb with "a" as name and "b" as description
+    * When making a query to fetch the data by its name and description
+    * It returns the matching data with "a" as name and "b" as description
+    **/
+    public function itReturnsRowWithAAsNameAndBAsDescription(): void
+    {
+        $query = (new QueryBuilder())
+            ->select('*')
+            ->from('testdb')
+            ->where('name = :name AND description = :description')
+            ->addParameter('name', 'a')
+            ->addParameter('description', 'b');
+
+        $resultQuery = $this->database->query($query);
+        $result = $resultQuery->fetchArray(SQLITE3_ASSOC);
+
+
+        $this->assertEquals("a", $result["name"]);
+        $this->assertEquals("b", $result["description"]);
     }
 
     /**
