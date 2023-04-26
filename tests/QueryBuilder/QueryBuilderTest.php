@@ -83,4 +83,25 @@ class QueryBuilderTest extends TestCase
 
         $this->database->query($query)->fetchArray(SQLITE3_ASSOC);
     }
+
+    /**
+    * @test
+    *
+    * Given a query with a dynamic argument and 2 dynamic arguments added
+    * When executing the query
+    * It does not throw any exception
+    **/
+    public function itDoesNotThrowOnQueryWithOneArgumentAndNonExistingArgumentAdded(): void
+    {
+        $query = (new QueryBuilder())
+            ->select('*')
+            ->from('testdb')
+            ->where('name = :name')
+            ->addParameter('description', 'nonExistingArgument');
+
+        $result = $this->database->query($query)->fetchArray(SQLITE3_ASSOC);
+
+        $this->assertFalse($result);
+
+    }
 }

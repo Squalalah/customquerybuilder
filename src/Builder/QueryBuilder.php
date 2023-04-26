@@ -6,6 +6,9 @@ use tests\MyDB;
 
 class QueryBuilder
 {
+    private const DYNAMIC_ARGUMENT_DELIMITER = ':';
+
+    private const ESCAPE_DELIMITER = '\'';
     private string $query;
     private string $selectQuery = "SELECT ";
 
@@ -41,7 +44,7 @@ class QueryBuilder
 
     public function addParameter(string $parameterName, string $parameterValue): self
     {
-        $this->parameters[] = [$parameterName => $parameterValue];
+        $this->parameters[$parameterName] = $parameterValue;
 
         return $this;
     }
@@ -53,28 +56,53 @@ class QueryBuilder
             if(!$this->checkParametersCountMatchesWithWhereParams()) {
                 throw new \Exception("The QueryBuilder parameters count does not match the number of dynamic parameter in WHERE clause");
             }
-            $customParametersCount = substr_count($this->whereClause, ':', 0);
-            for($i = 0; $i < $customParametersCount; $i++) {
-                $pos = strpos($this->whereClause, ':', 0);
-                if($pos !== false) {
-                    foreach($this->parameters as $parameter) {
-                        /** @var array<mixed> $parameter */
-                        /** @var string $name */
-                        $name = array_key_first($parameter);
-                        if(strpos($this->whereClause, $name, $pos)-$pos !== 1) {
-                            continue;
-                        }
-                        $this->whereClause = substr_replace($this->whereClause, "'" . $parameter[$name] . "'", $pos, strlen($name)+1);
+            $numDynamicParametersInQuery = substr_count($this->whereClause, self::DYNAMIC_ARGUMENT_DELIMITER, 0);
+            if($numDynamicParametersInQuery > 0) {
+                /**
+                 * @var string $parameterName
+                 * @var string $parameterValue
+                 */
+                foreach($this->parameters as $parameterName => $parameterValue) {
+                    $parsedParameterName = $this->parseParameterName($parameterName);
+                    $parsedParameterValue = $this->parseParameterValue($parameterValue);
+
+                    if(false === $this->isGivenParameterInQuery($parameterName)) {
+                        continue;
                     }
+                    $this->whereClause = $this->putParameterInQuery($parsedParameterName, $parsedParameterValue);
                 }
             }
             $this->query .= trim($this->whereClause);
         }
+
         return $this->query;
     }
     public function __toString(): string
     {
         return $this->buildQuery();
+    }
+
+    private function parseParameterName(string $parameter): string
+    {
+        return self::DYNAMIC_ARGUMENT_DELIMITER . $parameter;
+    }
+
+    private function parseParameterValue(string $parameter): string
+    {
+        return self::ESCAPE_DELIMITER . $parameter . self::ESCAPE_DELIMITER;
+    }
+
+    /**
+     * @return false|int
+     */
+    private function isGivenParameterInQuery(string $parameter)
+    {
+        return strpos($this->whereClause, $parameter);
+    }
+
+    private function putParameterInQuery(string $parameterName, string $parameterValue): string
+    {
+        return str_replace($parameterName, $parameterValue, $this->whereClause);
     }
 
     private function checkParametersCountMatchesWithWhereParams(): bool
