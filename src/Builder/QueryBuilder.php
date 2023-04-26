@@ -61,7 +61,6 @@ class QueryBuilder
         if (isset($this->fromTableQuery)) {
             $query .= $this->fromTableQuery;
         }
-
         if (isset($this->whereClause)) {
             $query .= $this->buildWhereClause();
         }
