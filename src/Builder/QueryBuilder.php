@@ -63,24 +63,7 @@ class QueryBuilder
         }
 
         if (isset($this->whereClause)) {
-            $whereQuery = $this->whereClause;
-            if(!$this->checkParametersCountMatchesWithWhereParams()) {
-                throw new QueryParameterCountDontMatchException();
-            }
-
-            if($this->countParametersInQuery() > 0) {
-                /** @var string $parameterValue */
-                foreach($this->parameters as $parameterName => $parameterValue) {
-                    $parsedParameterName = $this->parseParameterName($parameterName);
-                    $parsedParameterValue = $this->parseParameterValue($parameterValue);
-
-                    if(false === $this->isGivenParameterInQuery($parameterName)) {
-                        continue;
-                    }
-                    $whereQuery = $this->putParameterInQuery($parsedParameterName, $parsedParameterValue, $whereQuery);
-                }
-            }
-            $query .= $whereQuery;
+            $query .= $this->buildWhereClause();
         }
 
         return $query;
@@ -113,9 +96,31 @@ class QueryBuilder
         return str_replace($parameterName, $parameterValue, $query);
     }
 
-    private function countParametersInQuery(): int
+    private function countDynamicParametersInQuery(): int
     {
         return substr_count($this->whereClause, self::DYNAMIC_ARGUMENT_DELIMITER);
+    }
+
+    private function buildWhereClause(): string
+    {
+        $whereQuery = $this->whereClause;
+        if(!$this->checkParametersCountMatchesWithWhereParams()) {
+            throw new QueryParameterCountDontMatchException();
+        }
+
+        if($this->countDynamicParametersInQuery() > 0) {
+            /** @var string $parameterValue */
+            foreach($this->parameters as $parameterName => $parameterValue) {
+                $parsedParameterName = $this->parseParameterName($parameterName);
+                $parsedParameterValue = $this->parseParameterValue($parameterValue);
+
+                if(false === $this->isGivenParameterInQuery($parameterName)) {
+                    continue;
+                }
+                $whereQuery = $this->putParameterInQuery($parsedParameterName, $parsedParameterValue, $whereQuery);
+            }
+        }
+        return $whereQuery;
     }
 
     private function checkParametersCountMatchesWithWhereParams(): bool
