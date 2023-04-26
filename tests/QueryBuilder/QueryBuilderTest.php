@@ -2,7 +2,6 @@
 
 namespace tests\QueryBuilder;
 
-use _PHPStan_532094bc1\React\Dns\Query\Query;
 use CustomQueryBuilder\Builder\QueryBuilder;
 use Exception;
 use PHPUnit\Framework\TestCase;
@@ -13,9 +12,10 @@ require_once("autoload.php");
 class QueryBuilderTest extends TestCase
 {
     private MyDB $database;
+    private const DATABASE_URL = 'logs\test.db';
     protected function setUp(): void
     {
-        $this->database = new MyDB('logs\test.db');
+        $this->database = new MyDB(self::DATABASE_URL);
 
         parent::setUp();
     }
@@ -23,7 +23,7 @@ class QueryBuilderTest extends TestCase
     /**
     * @test
     *
-    * Given a data in testdb table with a "abc" as name
+    * Given a data in testdb table with an "abc" as name
     * When making the query to fetch the row by the name "abc"
     * It returns the matching row with "abc" as name
     **/
@@ -32,8 +32,8 @@ class QueryBuilderTest extends TestCase
         $query = (new QueryBuilder())
             ->select('name')
             ->from('testdb')
-            ->where('name = :name');
-        $query->addParameter('name', 'abc');
+            ->where('name = :name')
+            ->addParameter('name', 'abc');
 
         $result = $this->database->query($query)->fetchArray(SQLITE3_ASSOC);
 
