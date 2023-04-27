@@ -29,17 +29,18 @@ class QueryBuilderTest extends AppTestCase
     **/
     public function itReturnsRowWithAbcAsName(): void
     {
-        FixtureBuilder::create()->withName("abc")->build();
+        $name = 'abc';
+        FixtureBuilder::create()->withName($name)->build();
         $query = (new QueryBuilder())
             ->select('name')
             ->from('testdb')
             ->where('name = :name')
-            ->addParameter('name', 'abc');
+            ->addParameter('name', $name);
 
         $result = $this->database->query($query)->fetchArray(SQLITE3_ASSOC);
 
         $this->assertCount(1, $result);
-        $this->assertEquals("abc", $result["name"]);
+        $this->assertEquals($name, $result["name"]);
     }
 
     /**
@@ -51,20 +52,22 @@ class QueryBuilderTest extends AppTestCase
     **/
     public function itReturnsRowWithAAsNameAndBAsDescription(): void
     {
+        $name = 'a';
+        $description = 'b';
         FixtureBuilder::create()->withName("a")->withDescription('b')->build();
         $query = (new QueryBuilder())
             ->select('*')
             ->from('testdb')
             ->where('name = :name AND description = :description')
-            ->addParameter('name', 'a')
-            ->addParameter('description', 'b');
+            ->addParameter('name', $name)
+            ->addParameter('description', $description);
 
         $resultQuery = $this->database->query($query);
         $result = $resultQuery->fetchArray(SQLITE3_ASSOC);
 
 
-        $this->assertEquals("a", $result["name"]);
-        $this->assertEquals("b", $result["description"]);
+        $this->assertEquals($name, $result["name"]);
+        $this->assertEquals($description, $result["description"]);
     }
 
     /**
