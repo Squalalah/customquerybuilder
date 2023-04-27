@@ -18,3 +18,7 @@ $query = (new QueryBuilder())
 ```
 
 Le fait d'insérer l'objet ```$query``` en tant que chaine de caractère va automatiquement transformer l'objet en chaine de caractère lisible.
+
+### Dépendance PHP (dev)
+
+La bibliothèque sqlite.(dll|so) est nécessaire pour exécuter les tests
