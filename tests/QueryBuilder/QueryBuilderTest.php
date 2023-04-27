@@ -2,17 +2,17 @@
 
 namespace tests\QueryBuilder;
 
+use tests\Builder\FixtureBuilder;
 use CustomQueryBuilder\Builder\QueryBuilder;
 use CustomQueryBuilder\Exception\QueryParameterCountDontMatchException;
-use PHPUnit\Framework\TestCase;
+use tests\AppTestCase;
 use tests\MyDB;
 
 require_once("autoload.php");
 
-class QueryBuilderTest extends TestCase
+class QueryBuilderTest extends AppTestCase
 {
     private MyDB $database;
-    private const DATABASE_URL = 'logs\test.db';
     protected function setUp(): void
     {
         $this->database = new MyDB(self::DATABASE_URL);
@@ -29,6 +29,7 @@ class QueryBuilderTest extends TestCase
     **/
     public function itReturnsRowWithAbcAsName(): void
     {
+        FixtureBuilder::create()->withName("abc")->build();
         $query = (new QueryBuilder())
             ->select('name')
             ->from('testdb')
@@ -50,6 +51,7 @@ class QueryBuilderTest extends TestCase
     **/
     public function itReturnsRowWithAAsNameAndBAsDescription(): void
     {
+        FixtureBuilder::create()->withName("a")->withDescription('b')->build();
         $query = (new QueryBuilder())
             ->select('*')
             ->from('testdb')
