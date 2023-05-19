@@ -21,7 +21,7 @@ class InsertQueryBuilderTest extends AppTestCase
         $name = "a" . rand(0, 999);
         $description = "b" . rand(0, 999);
         $query = (new QueryBuilder())
-            ->insertInto("testdb")
+            ->insertInto(self::DATABASE_NAME)
             ->inFields("name", "description")
             ->withValues($name, $description);
 
@@ -29,7 +29,7 @@ class InsertQueryBuilderTest extends AppTestCase
 
         $query = (new QueryBuilder())
             ->select("name", "description")
-            ->from("testdb")
+            ->from(self::DATABASE_NAME)
             ->where("name = :name AND description = :description")
             ->addParameter("name", $name)
             ->addParameter("description", $description);
