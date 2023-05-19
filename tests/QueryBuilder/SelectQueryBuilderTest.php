@@ -2,24 +2,15 @@
 
 namespace tests\QueryBuilder;
 
+require_once("autoload.php");
+
 use tests\Builder\FixtureBuilder;
 use CustomQueryBuilder\Builder\QueryBuilder;
 use CustomQueryBuilder\Exception\QueryParameterCountDontMatchException;
 use tests\AppTestCase;
-use tests\MyDB;
 
-require_once("autoload.php");
-
-class QueryBuilderTest extends AppTestCase
+class SelectQueryBuilderTest extends AppTestCase
 {
-    private MyDB $database;
-    protected function setUp(): void
-    {
-        $this->database = new MyDB(self::DATABASE_URL);
-
-        parent::setUp();
-    }
-
     /**
     * @test
     *
@@ -33,7 +24,7 @@ class QueryBuilderTest extends AppTestCase
         FixtureBuilder::create()->withName($name)->build();
         $query = (new QueryBuilder())
             ->select('name')
-            ->from('testdb')
+            ->from(self::DATABASE_NAME)
             ->where('name = :name')
             ->addParameter('name', $name);
 
@@ -57,7 +48,7 @@ class QueryBuilderTest extends AppTestCase
         FixtureBuilder::create()->withName("a")->withDescription('b')->build();
         $query = (new QueryBuilder())
             ->select('*')
-            ->from('testdb')
+            ->from(self::DATABASE_NAME)
             ->where('name = :name AND description = :description')
             ->addParameter('name', $name)
             ->addParameter('description', $description);
@@ -83,7 +74,7 @@ class QueryBuilderTest extends AppTestCase
 
         $query = (new QueryBuilder())
             ->select('*')
-            ->from('testdb')
+            ->from(self::DATABASE_NAME)
             ->where('name = :name');
 
         $this->database->query($query)->fetchArray(SQLITE3_ASSOC);
@@ -100,7 +91,7 @@ class QueryBuilderTest extends AppTestCase
     {
         $query = (new QueryBuilder())
             ->select('*')
-            ->from('testdb')
+            ->from(self::DATABASE_NAME)
             ->where('name = :name')
             ->addParameter('description', 'nonExistingArgument');
 

@@ -9,6 +9,12 @@
       "email": "amontreuilpro@gmail.com"
     }
   ],
+  "autoload": {
+    "psr-4": {
+      "tests\\": "tests/",
+      "CustomQueryBuilder\\": "src/"
+    }
+  },
   "require": {
     "php": ">=7.4"
   },

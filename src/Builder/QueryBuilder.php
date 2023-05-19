@@ -2,29 +2,59 @@
 
 namespace CustomQueryBuilder\Builder;
 
+use CustomQueryBuilder\Entity\Parameter;
 use CustomQueryBuilder\Exception\QueryParameterCountDontMatchException;
-use tests\MyDB;
 
 class QueryBuilder
 {
-    private const DYNAMIC_ARGUMENT_DELIMITER = ":";
+    private ?string $type = null;
     private const SELECT = "SELECT";
+    private const INSERT_INTO = "INSERT INTO";
     private const FROM = "FROM";
     private const WHERE = "WHERE";
+    private const VALUES = "VALUES";
     private const SELECT_DELIMITER_PARAM = ",";
     private const ESCAPE_DELIMITER = "'";
+    private const DYNAMIC_ARGUMENT_DELIMITER = ":";
 
-    private string $selectQuery;
+    private string $firstQueryBlock;
+    /** @var array<string> $insertIntoColumns */
+    private array $insertIntoColumns;
+    /** @var array<string> $insertIntoValues */
+    private array $insertIntoValues;
     private string $fromTableQuery;
-
     private string $whereClause;
 
-    /** @var array<mixed> $parameters */
+    /** @var Parameter[] $parameters */
     private array $parameters = [];
     public function select(string... $args): self
     {
+        $this->type = self::SELECT;
         $select = self::SELECT . " " . implode(self::SELECT_DELIMITER_PARAM, $args) . " ";
-        $this->selectQuery = $select;
+        $this->firstQueryBlock = $select;
+
+        return $this;
+    }
+
+    public function insertInto(string $table): self
+    {
+        $this->type = self::INSERT_INTO;
+        $insert = self::INSERT_INTO . " " . $table . " ";
+        $this->firstQueryBlock = $insert;
+
+        return $this;
+    }
+
+    public function inFields(string... $args): self
+    {
+        $this->insertIntoColumns = $args;
+
+        return $this;
+    }
+
+    public function withValues(string... $args): self
+    {
+        $this->insertIntoValues = $args;
 
         return $this;
     }
@@ -47,7 +77,7 @@ class QueryBuilder
 
     public function addParameter(string $parameterName, string $parameterValue): self
     {
-        $this->parameters[$parameterName] = $parameterValue;
+        $this->parameters[] = new Parameter($parameterName, $parameterValue);
 
         return $this;
     }
@@ -55,14 +85,15 @@ class QueryBuilder
     public function buildQuery(): string
     {
         $query = "";
-        if (isset($this->selectQuery)) {
-            $query .= $this->selectQuery;
-        }
-        if (isset($this->fromTableQuery)) {
-            $query .= $this->fromTableQuery;
-        }
-        if (isset($this->whereClause)) {
-            $query .= $this->buildWhereClause();
+        switch($this->type) {
+            case self::SELECT: {
+                $query .= $this->buildSelect();
+                break;
+            }
+            case self::INSERT_INTO: {
+                $query .= $this->buildInsert();
+                break;
+            }
         }
 
         return $query;
@@ -70,6 +101,36 @@ class QueryBuilder
     public function __toString(): string
     {
         return $this->buildQuery();
+    }
+
+    private function buildInsert(): string
+    {
+        $result = '';
+        if (isset($this->firstQueryBlock)) {
+            $result = $this->firstQueryBlock;
+        }
+        $insertColumn = "(" . implode(',', $this->insertIntoColumns) . ")";
+        $insertValue = self::VALUES . "('" . implode("','", $this->insertIntoValues) . "')";
+
+        $result .= $insertColumn . $insertValue;
+
+        return $result;
+    }
+
+    private function buildSelect(): string
+    {
+        $result = '';
+        if (isset($this->firstQueryBlock)) {
+            $result = $this->firstQueryBlock;
+        }
+        if (isset($this->fromTableQuery)) {
+            $result .= $this->fromTableQuery;
+        }
+        if (isset($this->whereClause)) {
+            $result .= $this->buildWhereClause();
+        }
+
+        return $result;
     }
 
     private function parseParameterName(string $parameter): string
@@ -108,12 +169,11 @@ class QueryBuilder
         }
 
         if($this->countDynamicParametersInQuery() > 0) {
-            /** @var string $parameterValue */
-            foreach($this->parameters as $parameterName => $parameterValue) {
-                $parsedParameterName = $this->parseParameterName($parameterName);
-                $parsedParameterValue = $this->parseParameterValue($parameterValue);
+            foreach($this->parameters as $parameter) {
+                $parsedParameterName = $this->parseParameterName($parameter->getName());
+                $parsedParameterValue = $this->parseParameterValue($parameter->getValue());
 
-                if(false === $this->isGivenParameterInQuery($parameterName)) {
+                if(false === $this->isGivenParameterInQuery($parameter->getName())) {
                     continue;
                 }
                 $whereQuery = $this->putParameterInQuery($parsedParameterName, $parsedParameterValue, $whereQuery);
