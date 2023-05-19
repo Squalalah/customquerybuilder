@@ -148,7 +148,7 @@ class QueryBuilder
      */
     private function isGivenParameterInQuery(string $parameter)
     {
-        return strpos($this->whereClause, $parameter);
+        return strpos($this->whereClause, self::DYNAMIC_ARGUMENT_DELIMITER . $parameter);
     }
 
     private function putParameterInQuery(string $parameterName, string $parameterValue, string $query): string
