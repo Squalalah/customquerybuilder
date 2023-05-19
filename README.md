@@ -7,7 +7,7 @@ Celui-ci s'occupe de formater la requête SQL et retourne une chaine de caractè
 
 
 ### Exemple
-
+#### SELECT
 ```
 $query = (new QueryBuilder())
     ->select('*')
@@ -15,6 +15,13 @@ $query = (new QueryBuilder())
     ->where('name = :name AND description = :description')
     ->addArgument('name', 'hello')
     ->addArgument('description', 'world');
+```
+#### INSERT INTO
+```
+$query = (new QueryBuilder())
+    ->insertInto('table')
+    ->inFields("name", "description")
+    ->withValues($name, $description);
 ```
 
 Le fait d'insérer l'objet ```$query``` en tant que chaine de caractère va automatiquement transformer l'objet en chaine de caractère lisible.
