@@ -10,6 +10,8 @@ class QueryBuilder
     private ?string $type = null;
     private const SELECT = "SELECT";
     private const INSERT_INTO = "INSERT INTO";
+    private const UPDATE = "UPDATE";
+    private const SET = "SET";
     private const FROM = "FROM";
     private const WHERE = "WHERE";
     private const VALUES = "VALUES";
@@ -24,6 +26,9 @@ class QueryBuilder
     private array $insertIntoValues;
     private string $fromTableQuery;
     private string $whereClause;
+
+    /** @var Parameter[] $setParameters */
+    private array $setParameters = [];
 
     /** @var Parameter[] $parameters */
     private array $parameters = [];
@@ -45,6 +50,22 @@ class QueryBuilder
         return $this;
     }
 
+    public function update(string $table): self
+    {
+        $this->type = self::UPDATE;
+        $update = self::UPDATE . " " . $table . " ";
+        $this->firstQueryBlock = $update;
+
+        return $this;
+    }
+
+    public function set(string $parameterName, string $parameterValue): self
+    {
+        $this->setParameters[] = new Parameter($parameterName, $parameterValue);
+
+        return $this;
+    }
+
     public function inFields(string... $args): self
     {
         $this->insertIntoColumns = $args;
@@ -61,7 +82,7 @@ class QueryBuilder
 
     public function from(string $table): self
     {
-        $from = self::FROM . " " . $table . " ";
+        $from = self::FROM . " " . $table;
         $this->fromTableQuery = $from;
 
         return $this;
@@ -69,7 +90,7 @@ class QueryBuilder
 
     public function where(string $whereClause): self
     {
-        $where = self::WHERE . " " . $whereClause;
+        $where = " " . self::WHERE . " " . $whereClause;
         $this->whereClause = $where;
 
         return $this;
@@ -92,6 +113,10 @@ class QueryBuilder
             }
             case self::INSERT_INTO: {
                 $query .= $this->buildInsert();
+                break;
+            }
+            case self::UPDATE: {
+                $query .= $this->buildUpdate();
                 break;
             }
         }
@@ -128,6 +153,36 @@ class QueryBuilder
         }
         if (isset($this->whereClause)) {
             $result .= $this->buildWhereClause();
+        }
+
+        return $result;
+    }
+
+    private function buildUpdate(): string
+    {
+        $result = '';
+        if (isset($this->firstQueryBlock)) {
+            $result = $this->firstQueryBlock;
+        }
+        if (!empty($this->setParameters)) {
+            $result .= $this->buildUpdateSetParameters();
+        }
+        if (isset($this->whereClause)) {
+            $result .= $this->buildWhereClause();
+        }
+
+        return $result;
+    }
+
+    private function buildUpdateSetParameters(): string
+    {
+        $result = self::SET . " ";
+        $count = count($this->setParameters);
+        foreach($this->setParameters as $parameter) {
+            $result .= $parameter->getName() . " = '" . $parameter->getValue() . "'";
+            if(0 !== --$count) {
+                $result .= ",";
+            }
         }
 
         return $result;
